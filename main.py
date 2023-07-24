@@ -3,16 +3,33 @@ import pandas as pd
 import re
 
 # TOKEN DE EACESSO
-TOKEN_DE_ACESSO = '672AE82F-7D82-41F9-A85E-60B63407B11F'
+TOKEN_DE_ACESSO = '9CBE472F-A3A4-4FAD-A509-6798668EC7CD'
+
+# Função para consultar o saldo remanescente
+def consultar_saldo():
+    url_saldo = f'https://www.sintegraws.com.br/api/v1/consulta-saldo.php?token={TOKEN_DE_ACESSO}'
+    response_saldo = requests.get(url_saldo)
+    
+    if response_saldo.status_code == 200:
+        data_saldo = response_saldo.json()
+        saldo_remanescente = data_saldo['saldo']
+        return saldo_remanescente
+    else:
+        print(f'Erro ao consultar o saldo. Código de status: {response_saldo.status_code}')
+        return None
+
+
+#Função de editar o CNPJ
+def format_cnpj(cnpj):
+    return re.sub(r'\D', '', cnpj)
 
 #Verificar a entrada do CNPJ
 CNPJ = None
 while not CNPJ:
-    cnpj = input("Digite o número do CNPJ (somente números): ")
-    if re.match("^[0-9]{14}$", cnpj):
-        CNPJ = cnpj
-    else:
-        print("Entrada inválida! Digite apenas 14 números.")
+    cnpj = input("Digite o número do CNPJ (formato XX.XXX.XXX/XXXX-XX): ")
+    CNPJ = format_cnpj(cnpj)
+    if len(CNPJ) != 14:
+        print("Entrada inválida! Digite exatamente 14 dígitos.")
 
 # Fazer a requisição HTTP para a API
 url = f'https://www.sintegraws.com.br/api/v1/execute-api.php?token={TOKEN_DE_ACESSO}&cnpj={CNPJ}&plugin=ST'
@@ -61,7 +78,10 @@ if response.status_code == 200:
         df = df.stack().reset_index()
         df.columns = ['Variável', 'Indicador', 'Valor']
         df.to_excel('resultado.xlsx', index=False)
-        
+
+        saldo_remanescente = consultar_saldo(TOKEN_DE_ACESSO)
+        if saldo_remanescente is not None:
+            print(f'Saldo remanescente:{saldo_remanescente} Unidades'
     
     #Caso tenha o cadastro ele seguirá por esse caminho
     else:
@@ -95,7 +115,10 @@ if response.status_code == 200:
 
         df = df.stack().reset_index()
         df.columns = ['Variável', 'Indicador', 'Valor']
-        df.to_excel('resultado.xlsx', index=False)    
+        df.to_excel('resultado.xlsx', index=False)
 
+        saldo_remanescente = consultar_saldo(TOKEN_DE_ACESSO)
+        if saldo_remanescente is not None:
+            print(f'Saldo remanescente:{saldo_remanescente} Unidades'
 else:
     print(f'Erro ao fazer a requisição HTTP. Código de status: {response.status_code}')
