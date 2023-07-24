@@ -2,17 +2,20 @@ import requests
 import pandas as pd
 import re
 
-# TOKEN DE EACESSO
+# TOKEN DE ACESSO
 TOKEN_DE_ACESSO = '672AE82F-7D82-41F9-A85E-60B63407B11F'
+
+# FUNÇÃO DE CONVERSÃO
+def format_cnpj(cnpj):
+    return re.sub(r'\D', '', cnpj)
 
 #Verificar a entrada do CNPJ
 CNPJ = None
 while not CNPJ:
-    cnpj = input("Digite o número do CNPJ (somente números): ")
-    if re.match("^[0-9]{14}$", cnpj):
-        CNPJ = cnpj
-    else:
-        print("Entrada inválida! Digite apenas 14 números.")
+    cnpj = input("Digite o número do CNPJ (formato XX.XXX.XXX/XXXX-XX): ")
+    CNPJ = format_cnpj(cnpj)
+    if len(CNPJ) != 14:
+        print("Entrada inválida! Digite exatamente 14 dígitos.")
 
 # Fazer a requisição HTTP para a API
 url = f'https://www.sintegraws.com.br/api/v1/execute-api.php?token={TOKEN_DE_ACESSO}&cnpj={CNPJ}&plugin=ST'
